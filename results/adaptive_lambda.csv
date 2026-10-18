@@ -1,0 +1,5 @@
+dataset,n_features,depth,fixed_acc,fixed_sparsity,fixed_sec,adaptive_acc,adaptive_sparsity,adaptive_sec
+Iris,4,3,0.9667,0.2143,15.0577,0.9800,0.1429,32.1421
+Wine,13,3,0.9773,0.1538,19.3979,0.9776,0.1648,13.7230
+BreastCancer,30,3,0.9649,0.1190,20.3173,0.9614,0.1333,20.8537
+Digits,64,4,0.8937,0.0698,30.3419,0.8581,0.0760,31.7475

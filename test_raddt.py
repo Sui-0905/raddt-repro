@@ -21,6 +21,20 @@ def test_params_survive_clone():
     assert p["l1_lambda"] == 0.01, p
 
 
+def test_sklearn_protocol():
+    """回归测试：mixin 顺序写反会让 is_classifier() 返回 False，
+    于是 cross_val_score(cv=3) 退化成普通 KFold；iris 按类别排序，每折整折同类，直接得 0 分。"""
+    from sklearn.base import is_classifier, is_regressor
+
+    assert is_classifier(RADDTClassifier()), "应被识别为分类器"
+    assert is_regressor(RADDTRegressor()), "应被识别为回归器"
+
+    X, y = load_iris(return_X_y=True)
+    m = RADDTClassifier(depth=3, epochs=40, n_alpha_stages=3, n_restarts=1, seed=0)
+    scores = cross_val_score(m, X, y, cv=3)          # 注意：整数 cv
+    assert scores.mean() > 0.8, f"整数 cv 应走分层抽样，实际 {scores}"
+
+
 def test_fits_iris():
     X, y = load_iris(return_X_y=True)
     m = RADDTClassifier(depth=3, epochs=40, n_alpha_stages=3, n_restarts=1, seed=0)
@@ -46,7 +60,7 @@ def test_deterministic():
 
 
 if __name__ == "__main__":
-    for fn in [test_params_survive_clone, test_fits_iris,
+    for fn in [test_params_survive_clone, test_sklearn_protocol, test_fits_iris,
                test_regression_returns_continuous, test_deterministic]:
         fn()
         print(f"PASS {fn.__name__}")

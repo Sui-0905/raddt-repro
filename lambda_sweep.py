@@ -19,7 +19,7 @@ X, y = load_digits(return_X_y=True)
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
 rows = []
-for lam in (0.0, 1e-4, 1e-3):
+for lam in (0.0, 1e-4, 1e-3, 1e-2):
     t0 = time.time()
     model = RADDTClassifier(depth=4, lr=0.01, epochs=150,
                             alpha_min=2.0, alpha_max=200.0,

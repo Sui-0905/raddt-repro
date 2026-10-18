@@ -3,8 +3,10 @@
 > 复现 **RADDT**（ReLU + Argmin 重构的可微分决策树，NeurIPS 2025），并在分裂权重上加 **L1 稀疏正则**做特征选择。
 > 4 个 UCI 数据集 × 5 折交叉验证，对比 CART / Random Forest。
 >
-> 过程中在自己第一版实现里找出并修掉了三个错误：**sklearn clone 丢参数**、**叶子数少于类别数**、**正则强度用错**。
+> 过程中在自己第一版实现里找出并修掉了四个错误：**sklearn clone 丢参数**、**叶子数少于类别数**、**正则强度用错**、**分类器没被 sklearn 认出来**。
 > 修完之后，RADDT 在 4 个数据集上全部超过 CART；调好强度的稀疏版在 Iris 和 Digits 上继续提升。
+
+**English summary.** A reproduction of RADDT (NeurIPS 2025), a differentiable decision-tree formulation, plus an L1-sparse variant. Four UCI datasets, 5-fold cross-validation, controlled ablations on tree depth and regularization strength, and a documented account of three implementation bugs found in our own first version (sklearn parameter cloning, leaf count vs. class count, inconsistent regularization). Technical report under `paper/`; self-checks in `test_raddt.py`.
 
 ---
 
@@ -75,7 +77,7 @@ loss = base_loss + l1_lambda * A.abs().sum()
 
 **正则不是越强越好**：λ=1e-3 在更稀疏的同时还涨了 1.2 个百分点；λ=1e-2 直接把准确率打掉 6 个点。
 
-## 5. 我在自己第一版里修掉的三个错误
+## 5. 我在自己第一版里修掉的四个错误
 
 这一节比结果表更值得看。
 
@@ -91,6 +93,12 @@ loss = base_loss + l1_lambda * A.abs().sum()
    第一版复跑时改了 λ 却没记录，导致"深度修正带来提升"这个结论混入了第二个变量。
    → 现在所有对照都固定其它因素，只动一个变量。
 
+4. **估计器没被 sklearn 认成分类器。**
+   继承写成 `class RADDTClassifier(RADDTBase, ClassifierMixin)`，mixin 排在后面，`is_classifier()` 返回 `False`。
+   于是 `cross_val_score(..., cv=3)` 退回普通 KFold；Iris 按类别排序，每折整折同一类，训练集里根本没有这个类，准确率直接是 **0**。
+   显式传 `StratifiedKFold` 时一切正常，所以只有换一种调用方式才会暴露。
+   → mixin 放到前面，并加了一条用整数 `cv` 的回归测试。
+
 ## 6. 局限
 
 - 只有 4 个 sklearn 内置数据集（150–1797 样本），结论不能外推到真实规模；
@@ -99,16 +107,24 @@ loss = base_loss + l1_lambda * A.abs().sum()
 - RADDT 训练比 CART 慢 2–3 个数量级（每折 1–30 秒 vs 0.02 秒）；
 - 没有和 OCT / ORT 这类精确全局优化方法对比。
 
-## 7. 已知问题
+## 7. 测试与已知边界
 
-- 用 `cross_val_score(model, X, y, cv=3)`（传整数）时结果异常；请显式传 `StratifiedKFold(..., shuffle=True)`，仓库里所有脚本都是这么写的。
+`test_raddt.py` 覆盖五件事：参数克隆、sklearn 协议识别、Iris 拟合、回归输出连续值、同种子可复现。
+
+其中「协议识别」是一条历史 bug 的回归测试：分类器的 mixin 顺序写反时，`is_classifier()` 会返回 `False`，`cross_val_score(..., cv=3)` 就会退化成普通 KFold；Iris 按类别排序，每折整折同类，准确率直接变成 0。现在已修正，并用整数 `cv` 的用例锁住。
+
+已知边界：
+
+- 单一种子、只做 5 折，未做嵌套交叉验证；
+- **λ=1e-3 是在同一组折上选出来的**，所以主表里 +1.2 个百分点属于探索性结果，不是无偏估计；严格做法是嵌套 CV 或独立验证集，本文没做；
+- 只有 4 个内置数据集，规模 150–1797。
 
 ## 8. 运行
 
 ```bash
 pip install -r requirements.txt
 
-python test_raddt.py          # 4 个自检，约 20 秒
+python test_raddt.py          # 5 个自检，约 20 秒
 python run_experiment.py      # 主表，约 4 分钟
 python depth_study.py         # 树深对照，约 2 分钟
 python lambda_sweep.py        # 正则强度扫描，约 2 分钟

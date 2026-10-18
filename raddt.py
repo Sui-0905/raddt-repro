@@ -174,7 +174,7 @@ class RADDTBase(BaseEstimator):
         return float((self.A.abs() < tol).float().mean().item())
 
 
-class RADDTClassifier(RADDTBase, ClassifierMixin):
+class RADDTClassifier(ClassifierMixin, RADDTBase):
     def __init__(self, depth=3, lr=0.01, epochs=150, alpha_min=2.0, alpha_max=200.0,
                  n_alpha_stages=4, n_restarts=2, l1_lambda=0.0, adaptive_l1=False,
                  seed=0, device="cpu"):
@@ -192,7 +192,7 @@ class RADDTClassifier(RADDTBase, ClassifierMixin):
         return self.encoder_.inverse_transform(super().predict(self.scaler_.transform(X)))
 
 
-class RADDTRegressor(RADDTBase, RegressorMixin):
+class RADDTRegressor(RegressorMixin, RADDTBase):
     def __init__(self, depth=3, lr=0.01, epochs=150, alpha_min=2.0, alpha_max=200.0,
                  n_alpha_stages=4, n_restarts=2, l1_lambda=0.0, adaptive_l1=False,
                  seed=0, device="cpu"):

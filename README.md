@@ -6,7 +6,7 @@
 > 过程中在自己第一版实现里找出并修掉了四个错误：**sklearn clone 丢参数**、**叶子数少于类别数**、**正则强度用错**、**分类器没被 sklearn 认出来**。
 > 修完之后，RADDT 在 4 个数据集上全部超过 CART；调好强度的稀疏版在 Iris 和 Digits 上继续提升。
 
-**English summary.** A reproduction of RADDT (NeurIPS 2025), a differentiable decision-tree formulation, plus an L1-sparse variant. Four UCI datasets, 5-fold cross-validation, controlled ablations on tree depth and regularization strength, and a documented account of three implementation bugs found in our own first version (sklearn parameter cloning, leaf count vs. class count, inconsistent regularization). Technical report under `paper/`; self-checks in `test_raddt.py`.
+**English summary.** A reproduction of RADDT (NeurIPS 2025), a differentiable decision-tree formulation, plus an L1-sparse variant. Four UCI datasets, 5-fold cross-validation, controlled ablations on tree depth and regularization strength, and a documented account of four implementation bugs found in our own first version (sklearn parameter cloning, leaf count vs. class count, inconsistent regularization, estimator mixin order). Technical report under `paper/`; self-checks in `test_raddt.py`.
 
 ---
 
@@ -60,11 +60,11 @@ loss = base_loss + l1_lambda * A.abs().sum()
 | 3 | 8 | 0.681 |
 | 4 | 16 | **0.882** |
 
-8 个叶子去装 10 个类别，准确率被结构性地压在 0.68。
+8 个叶子最多只能输出 8 种预测，覆盖不了 10 个类别。注意 0.681 是实测值，不是由叶子数推出来的理论上限。
 
 ### 4.2 L1 强度必须调
 
-在 Digits 上扫三个量级：
+在 Digits 上扫四档 λ：
 
 ![lambda](figures/lambda_sweep.png)
 

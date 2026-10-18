@@ -68,19 +68,27 @@ plt.close()
 
 # ---------- 图 3：正则强度 ----------
 rows = read("results/lambda_sweep.csv")
-lams = [float(r["l1_lambda"]) for r in rows]
 accs = [float(r["accuracy"]) for r in rows]
 spars = [float(r["sparsity"]) for r in rows]
+pos = list(range(len(rows)))
+labels = ["0", "1e-4", "1e-3", "1e-2"][: len(rows)]
 
-fig, ax1 = plt.subplots(figsize=(5.4, 3.8))
-ax1.plot(lams, accs, marker="o", lw=2, color="#4c72b0", label="accuracy")
+fig, ax1 = plt.subplots(figsize=(5.6, 3.8))
+ax1.plot(pos, accs, marker="o", lw=2, color="#4c72b0", label="accuracy")
+for x, y in zip(pos, accs):
+    ax1.annotate(f"{y:.3f}", (x, y), textcoords="offset points", xytext=(0, 9),
+                 ha="center", fontsize=8, color="#4c72b0")
 ax1.set_xlabel("L1 strength λ")
 ax1.set_ylabel("accuracy (Digits)", color="#4c72b0")
+ax1.set_xticks(pos)
+ax1.set_xticklabels(labels)
 ax1.set_ylim(0.78, 0.94)
+
 ax2 = ax1.twinx()
-ax2.plot(lams, spars, marker="s", lw=1.6, ls="--", color="#c44e52", label="sparsity")
+ax2.plot(pos, spars, marker="s", lw=1.6, ls="--", color="#c44e52", label="sparsity")
 ax2.set_ylabel("weight sparsity", color="#c44e52")
 ax2.set_ylim(0, 0.12)
+
 plt.title("L1 strength: too strong hurts, 1e-3 is sweet")
 plt.tight_layout()
 plt.savefig("figures/lambda_sweep.png", dpi=160)

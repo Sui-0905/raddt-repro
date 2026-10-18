@@ -102,7 +102,7 @@ para("技术报告 · 2026 年 10 月", size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
 h("摘要", 1)
 para(
     "决策树以可解释性见长，但贪心构建策略只能保证局部最优。RADDT 通过"
-    "“ReLU + Argmin”重构，把整棵树的训练转化为无约束可微优化，在保留硬分裂的同时实现全局优化。"
+    "“ReLU + Argmin”重构，把整棵树的训练转化为无约束的可微目标，并用梯度下降优化，同时保留硬分裂。需要说明的是，梯度优化并不保证找到全局最优，本文只声称它把树参数化成了可优化的连续目标。"
     "本文做两件事：其一，独立复现 RADDT，并在四个 UCI 数据集上与 CART、随机森林做五折交叉验证对比；"
     "其二，在分裂权重上引入 L1 稀疏正则（Sparse-RADDT），并系统考察树深与正则强度的影响。"
     "实验表明：修正树深设置后，RADDT 在四个数据集上均优于 CART，并在 Wine 与 BreastCancer 上追平随机森林；"
@@ -123,7 +123,7 @@ para(
     "RADDT outperforms CART on all four datasets and matches Random Forest on Wine and BreastCancer. "
     "The L1 penalty is highly sensitive to its strength: at lambda=1e-3 it improves Digits accuracy by "
     "1.2 points while sparsifying 7.0% of the weights, whereas lambda=1e-2 costs 6.2 points. "
-    "We also document three implementation pitfalls that silently invalidate results while appearing to work."
+    "We also document four implementation pitfalls that silently invalidate results while appearing to work."
 )
 
 # ---------- 1 引言 ----------
@@ -210,7 +210,7 @@ table(
     "表 2　树深对 Digits 的影响（10 类）",
 )
 para(
-    "这是一个受控对照：只改树深，其余因素全部固定。8 个叶子无法覆盖 10 个类别，准确率被结构性压在 0.68；"
+    "这是一个受控对照：只改树深，其余因素全部固定。8 个叶子最多只能输出 8 种预测，覆盖不了 10 个类别；0.681 是实测准确率，不是由叶子数推出的理论上限。"
     "扩到 16 个叶子后升至 0.88。该约束可以由类别数直接算出，却很容易在复现中被忽略。"
 )
 
@@ -311,7 +311,7 @@ para(
     "本文复现了基于 ReLU+Argmin 重构的可微分决策树 RADDT，并在其分裂权重上引入 L1 稀疏正则。"
     "修正树深设置后，RADDT 在四个数据集上均优于 CART，并在两个数据集上追平随机森林；"
     "L1 正则的收益强依赖于强度选择，λ=1e-3 可在保持精度的同时获得约 7% 的权重稀疏。"
-    "与结果相比，本文更想强调的是复现过程本身：三个不会报错的实现陷阱，足以让一整张实验表格失去意义。"
+    "与结果相比，本文更想强调的是复现过程本身：四个不会报错的实现陷阱，足以让一整张实验表格失去意义。"
 )
 
 # ---------- 参考文献 ----------
